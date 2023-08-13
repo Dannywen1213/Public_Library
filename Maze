@@ -1,0 +1,491 @@
+#include<bits/stdc++.h>
+#include<windows.h>
+#include<conio.h>
+using namespace std;
+
+#define MAXN 50//迷宫大小
+typedef struct//BFS寻路用
+{
+    int x,y;
+    int step;
+}Pos;
+
+Pos start,finish,path[2500];//起点,终点,路径
+int k;//BFS路径标记
+int Rank=10;//控制难度,Rank越小难度越大
+
+int maze[MAXN][MAXN];
+int bookBFS[MAXN][MAXN];//用于BFS是否访问标记
+int visit[MAXN][MAXN];//标记BFS的过程
+
+void BFS();//BFS最短路径寻路
+void Gamer();//用户操作界面
+void DrawMaze();//绘制迷宫
+void DrawPath();//绘制路径
+void choice_level();//选择关卡
+void CreateMaze(int,int,int);//创建迷宫
+void gotoxy(int,int);//坐标函数
+void InitMaze();//初始化迷宫
+void load_cartoon();//加载动画
+void HideCursor();//隐藏光标
+void ShowCursor();//显示光标
+
+
+char cartoon1[20][150] = {
+    {"                                                                    /~/~/                                      "},
+    {"                                                                   /~/~/                                       "},
+    {"                                             Microsotf@             ~ ~     __ XP                              "},
+    {"                                             \\  /\\  / -  _   _|  _  _   _  /_                                "},
+    {"                                              \\/  \\/  | | | |_| |_| \\/\\/  __/                              "},
+    {"                                                                                                               "},
+    {"                                                    _____________________                                      "},
+    {"                                                   │                    │                                      "},
+    {"                                                   └────────────────────┘                                      "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                  Copyright ΘMicrosoft Corporation                                            Microsoft*       "},
+};
+
+char cartoon2[40][150]={
+    {"                                                     健   康   游   戏   忠   告                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                     抵   制   不   良   游   戏  ， 拒   绝   盗   版   游   戏。             "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                     注   意   自   我   保   护  ， 谨   防   受   骗   上   当。             "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                     适   度   游   戏   益   脑  ， 沉   迷   游   戏   伤   身。             "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                                                                                               "},
+    {"                                     合   理   安   排   时   间  ， 享   受   健   康   生   活。             "},
+
+};
+
+//Logo
+char logo[30][100]={
+    {"      BBBBB                 BBBBBP                              BBBBBBB                   "},
+    {"      SBBBM                 BQBBBQ                              BBBBBBB                   "},
+    {"      BBBBBBB.   iEBBBI     BBBBQE     gBBQP:    BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "},
+    {"       uBBBBBBv  1BBBBBB    BBBBBb    BQBBBBJ    BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "},
+    {"        :BBBBBBQ  .BBBBBB.  BBQBBd  iBBBBBB      BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "},
+    {"         .BQBB5.    BQBQBB  BBBBBq IBBBBBZ       BBBBBB                            BBBBBB "},
+    {"           d.        BBBr   BBBBBq  :RBBi        BBBBBB                            BBBBBB "},
+    {"                            BBBBB2               BBBBBDBBQBBBBBBBBBBBQBBBBBBBBBQBQBBBBBBB "},
+    {"     Ivv7vr77j. 1BBBBBMBBBBBBBBBBBBBQBRQBBBBBR         BQBBBBBBBQBBBBBQBBBBBBBBBQBB       "},
+    {"    :BBBBBBBBB7 KBBQBBBBBBBBBQBQBQBQBBBQBQBBBB         BBBBBB                BBBBBB       "},
+    {"    :BBBBBBBBB: 2BQBBBBBQBBBBBBBBBBBBBBBBBBBBQ         BBBBBB                BBBQBE       "},
+    {"    .BQbQBBBBBi          QBBBBBBB1                     BBBBBB                BBBBBB       "},
+    {"        .BBBBBi        7QBBBQBQBBL BB:                 BBBBBBBBBQBBBBBBBBBBBBBQBBBQ       "},
+    {"        iBBBBBi      :BBBBBBBBBBBBBBBBBs               BBBBBBBBBBBBQBBBBBBBBBBBQBBM       "},
+    {"        iBBBBB:    :BBBBQBg MBQBBMEBBBBBQd                                                "},
+    {"        rBBBBB:  iBBBQBBBU  BBBBBj .BQBBBBBM:       BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB    "},
+    {"        iBBBBB. BBBBBBBB.   BBQBBb   :QBBBBBBK      BBBBQBBBBBBBBBQBQBBBBBBBBBBBBBQBBB    "},
+    {"        :QBBBQ. .QBBBBY     BBBBBd     iBBBBr       BBBBBBBBBBBQBBBBBBBQBBBQBBBBBBBBBB    "},
+    {"        LBBBBB7   :B2       QBBBBg       sZ         BBBBBB                      BBBBQB    "},
+    {"      rBBBBBBBBM.           BBBQB1                  BQBBBB                      BBBBBB    "},
+    {"    iBBBBBBBQBBBBBE                                 BBBBQB                      BBBBBB    "},
+    {"    .BBBBQBSBBBBBBBQBQBBBBBBBBBBBBBBBBBBBBBBBB.     BBBBBQBBBBBQBBBQBBBBBBBBBBBBBBBBBB    "},
+    {"     vBBQB.  rBBQBQBQBBBQBBBQBBBBBQBBBBBBBBBBv      BBQBBBBBQBBBBBQBQBBBBBBBBBBBQBBBBB    "},
+    {"      BBr        sPDQMQBBBBBBBBBBBBBBQBBBBBBB       BQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB    "},
+    {"                                                    BBBBBB                      BBBBBB    "},
+    {"                                                                                          "},
+    {"                                           制       作                                    "},
+    {"                                                                                          "},
+    {"                                           山       河                                    "}
+};
+
+//坐标函数
+void gotoxy(int x, int y) 
+{
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD pos;
+    pos.X = x;
+    pos.Y = y;
+    SetConsoleCursorPosition(handle, pos);
+}
+
+//隐藏光标
+void HideCursor()
+{
+    CONSOLE_CURSOR_INFO cursor_info={1,0};
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE),&cursor_info);
+}
+
+//显示光标
+void ShowCursor()
+{
+    CONSOLE_CURSOR_INFO cursor_info={1,1};
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE),&cursor_info);
+}
+
+//初始化迷宫 
+void InitMaze()
+{
+    for(int i=0;i<MAXN;i++)
+        for(int j=0;j<MAXN;j++)
+            maze[i][j]=1;
+    for(int i=0;i<MAXN;i++)
+    {
+        maze[i][0]=0;
+        maze[0][i]=0;
+        maze[MAXN-1][i]=0;
+        maze[i][MAXN-1]=0;
+    }
+    k=0;
+    memset(bookBFS,0,sizeof(bookBFS));
+    memset(path,0,sizeof(path));
+    memset(visit,0,sizeof(visit));
+}
+
+//创建仅有一条路径的迷宫
+void CreateMaze(int x, int y,int Rank) {
+	maze[x][y] = 0;
+
+	//确保四个方向随机
+	//每一次挖的顺序不同，如前左右，右前左
+    int dir[4][2] = { { 1,0 },{ -1,0 },{ 0,1 },{ 0,-1 } };
+	for (int i = 0; i < 4; i++) {
+		int r = rand() % 4;
+		//随机交换
+		int temp = dir[0][0];dir[0][0] = dir[r][0];dir[r][0] = temp;
+		temp = dir[0][1];dir[0][1] = dir[r][1];dir[r][1] = temp;
+	}
+
+    //向四周开挖
+	for (int i = 0; i < 4; i++) {
+		int dx = x;
+		int dy = y;
+
+		//控制挖的距离，由Rank来调整大小
+		int range = 1 + (Rank == 0 ? 0 : rand() % Rank);
+		while (range>0) {
+            dx+=dir[i][0];
+            dy+=dir[i][1];
+			//排除掉回头路
+			if (maze[dx][dy] == 0) break;
+			//判断是否挖穿路径
+			int count = 0;
+			for (int j = dx - 1; j < dx + 2; j++)
+				for (int k = dy - 1; k < dy + 2; k++)
+                 if (abs(j - dx) + abs(k - dy) == 1 && maze[j][k] == 0) count++;
+			if (count > 1)
+				break;
+			//确保不会挖穿时，前进
+			range--;
+			maze[dx][dy] = 0;
+		}
+		if (range <= 0)
+            CreateMaze(dx,dy,Rank);
+	}
+}
+
+void DrawMaze()
+{
+     //入口
+    maze[2][1]=0;
+    start.x=2;start.y=1;start.step=0;
+    //出口
+    for(int i=MAXN-3;i>=0;i--)
+    if(maze[i][MAXN-3]==0){
+        maze[i][MAXN-2]=0;
+        finish.x=i;finish.y=MAXN-2;finish.step=0;
+        break;
+    }
+    for(int i=0;i<MAXN;i++){
+        for(int j=0;j<MAXN;j++){
+            if(maze[i][j]==1)cout<<"■";
+            else cout<<"  ";
+        }
+        cout<<endl;
+    }
+}
+
+//迷宫寻路BFS,当迷宫只有一条路径，用BFS更省时
+void BFS()
+{
+    queue<Pos>q;
+    q.push(start);
+    int dx[4]={0,1,0,-1},dy[4]={1,0,-1,0};
+    bookBFS[start.x][start.y]=1;
+    int flag=0;
+    while(q.size()!=0)
+    {
+
+        Pos t=q.front();
+        q.pop();
+        if(t.x==finish.x&&t.y==finish.y)//找到终点
+        {
+            flag=1;
+            finish.step=t.step;
+
+            Pos t=finish;//倒推路径
+            while(!(t.x==start.x&&t.y==start.y))//不在起点的时候
+            {
+                path[k].x=t.x;path[k++].y=t.y;
+                int dx[4]={0,1,0,-1},dy[4]={1,0,-1,0};
+                for(int i=0;i<4;i++){
+                    Pos s=t;
+                    s.x+=dx[i];s.y+=dy[i];
+                    if(s.x<=0||s.x>MAXN-2||s.y<=0||s.y>MAXN-2||maze[s.x][s.y]==1)continue;//超出范围
+                    if(visit[s.x][s.y]==visit[t.x][t.y]-1){t.x=s.x;t.y=s.y;break;}//倒退回去
+                }
+            }
+            path[k]=start;//放入起点
+        }
+        if(flag==1)break;
+        //向四个方向扩展
+        for(int i=0;i<4;i++)
+        {
+            Pos p=t;
+            p.x+=dx[i];p.y+=dy[i];p.step++;
+            if(p.x<=0||p.x>MAXN-2||p.y<=0||p.y>MAXN-2||maze[p.x][p.y]==1||bookBFS[p.x][p.y]==1)
+            continue;
+            bookBFS[p.x][p.y]=1;
+            visit[p.x][p.y]=p.step;
+            q.push(p);
+        }
+    }
+}
+
+//绘制最短路径BFS
+void DrawPath()
+{
+    //路径坐标
+   int flag=0;
+   int dx[4]={-1,1,0,0},dy[4]={0,0,-1,1};
+   string road;
+   for(int i=k;i>=0;i--)
+    {
+        if(flag==0){flag=1;road="──";}//第一次进入
+        Pos t=path[i];//当前打印位置
+        if(flag==1&&i!=0){
+            Pos s=path[i+1];//存储上一个位置
+            Pos p=path[i-1];//存储下一个位置
+            int tx1,tx2,ty1,ty2;
+            tx1=t.x-s.x;ty1=t.y-s.y;
+            tx2=t.x-p.x;ty2=t.y-p.y;
+            //"┘""┐""└""┌""──""│"
+        if((tx1==-1&&tx2== 1&&ty1== 0&&ty2== 0)||(tx1== 1&&tx2==-1&&ty1== 0&&ty2== 0))road="│";
+        if((tx1== 0&&tx2== 0&&ty1== 1&&ty2==-1)||(tx1== 0&&tx2== 0&&ty1==-1&&ty2== 1))road="──";
+        if((tx1== 0&&tx2==-1&&ty1== 1&&ty2== 0)||(tx1==-1&&tx2== 0&&ty1== 0&&ty2== 1))road="┐";
+        if((tx1== 1&&tx2== 0&&ty1== 0&&ty2==-1)||(tx1== 0&&tx2== 1&&ty1==-1&&ty2== 0))road="└";
+        if((tx1==-1&&tx2== 0&&ty1== 0&&ty2==-1)||(tx1== 0&&tx2==-1&&ty1==-1&&ty2== 0))road="┌";
+        if((tx1== 1&&tx2== 0&&ty1== 0&&ty2== 1)||(tx1== 0&&tx2== 1&&ty1== 1&&ty2== 0))road="┘";
+        }
+        if(i==0)road="─";//出口位置
+            gotoxy(2*t.y,t.x);//每个方格占两个单位
+            cout<<road;
+    }
+}
+
+//玩家控制界面
+void Gamer()
+{
+    int x=2;int y=1;//maze行，列
+    int posx=2;int posy=2;//横着每次变化2,竖着每次移动变化1,这个是坐标
+    int stepx=2*MAXN+19,stepy=26;//步数刷新的位置
+    char ch1,ch2;
+    int gamerstep=0;//玩家走的步数
+    //隐藏光标
+    HideCursor();
+    //绘制
+    gotoxy(posx,posy);cout<<"●";//绘制起点
+    gotoxy(2*MAXN+5,2);cout<<"当前关卡："<<10-Rank;
+    gotoxy(2*MAXN+5,5);cout<<"方 向 控 制";
+    gotoxy(2*MAXN+10,9);cout<<"W";
+    gotoxy(2*MAXN+7,11);cout<<"A  S  D";
+    gotoxy(2*MAXN+10,15);cout<<"或";
+    gotoxy(2*MAXN+10,19);cout<<"↑";
+    gotoxy(2*MAXN+6,22);cout<<"←  ↓  →";
+    gotoxy(2*MAXN+3,26);cout<<"您 走 的 步 数:";
+    gotoxy(2*MAXN+3,30);cout<<"按下列选项序号即可呼出选择";
+    gotoxy(2*MAXN+3,34);cout<<"1 .查看最短路径";
+    gotoxy(2*MAXN+3,38);cout<<"2 .重新选择关卡";
+    gotoxy(2*MAXN+3,42);cout<<"3 .退出游戏";
+    while(!(x==finish.x&&y==finish.y)){
+      //同时启用wasd和方向键
+      ch1=getch();
+      if(ch1==-32)//方向键为双键值
+      {
+           ch2=getch();
+           switch(ch2)
+           {
+               case 72:ch1='w';break;//上
+               case 80:ch1='s';break;//下
+               case 75:ch1='a';break;//左
+               case 77:ch1='d';break;//右
+               default: break;
+           }
+      }
+      switch(ch1)
+       {
+          case 'w':
+          case 'W':
+            if(maze[x-1][y]==0){
+            gotoxy(posx,posy);cout<<"  ";
+            x--;posy--;gamerstep++;
+            gotoxy(posx,posy);cout<<"●";
+            gotoxy(stepx,stepy);cout<<gamerstep;//实时刷新走的步数
+            }break;
+          case 's':
+          case 'S':
+            if(maze[x+1][y]==0){
+            gotoxy(posx,posy);cout<<"  ";
+            x++;posy++;gamerstep++;
+            gotoxy(posx,posy);cout<<"●";
+            gotoxy(stepx,stepy);cout<<gamerstep;
+            }break;
+          case 'a':
+          case 'A':
+            if(maze[x][y-1]==0&&y-1>=1){
+            gotoxy(posx,posy);cout<<"  ";
+            y--;posx-=2;gamerstep++;
+            gotoxy(posx,posy);cout<<"●";
+            gotoxy(stepx,stepy);cout<<gamerstep;
+            }break;
+          case 'd':
+          case 'D':
+            if(maze[x][y+1]==0){
+            gotoxy(posx,posy);cout<<"  ";
+            y++;posx+=2;gamerstep++;
+            gotoxy(posx,posy);cout<<"●";
+            gotoxy(stepx,stepy);cout<<gamerstep;
+            }break;
+          case  '1':
+            BFS();DrawPath();
+            gotoxy(2*MAXN+3,46);cout<<"最少要走："<<finish.step<<"步";break;
+          case  '2':
+            choice_level();return ;
+          case  '3':
+             system("cls");
+             return ;
+        }
+    }
+    system("cls");
+    int grade=100-(gamerstep-finish.step),choice=0;
+    if(grade<=0)grade=0;
+    gotoxy(79,12);
+    cout<<"恭喜你通过了本关";
+    gotoxy(80,16);
+    cout<<"您的得分为："<<grade;
+    gotoxy(70,20);
+    cout<<"温馨提示：用的步数越少，得分越高哦^.^!"<<endl;
+
+    gotoxy(79,24);
+    cout<<"是否继续下一关";
+    gotoxy(79,28);
+    cout<<"1. 是     2.否";
+    gotoxy(82,32);
+    cin>>choice;
+    if(choice==1){
+        InitMaze();
+        CreateMaze(2,1,--Rank);
+        system("cls");
+        DrawMaze();
+        Gamer();
+    }
+    else{
+         system("cls");
+         return;
+    }
+
+}
+
+void load_cartoon()
+{
+    //动态加载页面
+    int i,l, j;
+	gotoxy(25, 15);
+    for (i = 0; i <= 16; i++)
+    {
+        cout<<cartoon1[i];
+        gotoxy(25,16+i);
+        Sleep(100);
+    }
+    for (l = 0; l < 3; l++)
+    { //动态加载开机页面
+        for (i = 53; i <= 71; i = i + 2)
+        {
+            for (j = i - 4; j <= i; j = j + 2)
+            {
+                if (j >= 53 && j <= 70)
+                {
+                    gotoxy(j+25, 22);
+                    printf("[]");
+                }
+                Sleep(100);
+            }
+            for (j = i - 4; j <= i; j = j + 2)
+            {
+                if (j >= 53 && j <= 70)
+                {
+                    gotoxy(j+25, 22);
+                    printf("  ");
+                }
+            }
+        }
+    }
+    //隐藏光标
+    HideCursor();
+    //游戏忠告
+    system("cls");
+    for (i = 0; i <= 20; i++)
+    {
+        gotoxy(25, 10+i);
+        cout<<cartoon2[i];
+    }
+    Sleep(4000);
+    //展示logo
+    system("cls");
+    for (i = 0; i <30; i++)
+    {   gotoxy(40,10+i);
+        cout<<logo[i];
+
+    }
+    Sleep(3000);
+}
+
+
+void choice_level()
+{
+    ShowCursor();
+    system("cls");
+    int level;
+    gotoxy(75,20);
+    cout<<"请输入你要选择的关卡(1-10)：";
+    cin>>level;
+    Rank=10-level;
+    InitMaze();
+    CreateMaze(2,1,Rank);
+    //重新初始化
+    system("cls");
+    DrawMaze();
+    Gamer();
+}
+
+int main()
+{
+    srand((unsigned)time(NULL));//用时间做随机数种子
+    system("mode con cols=200 lines=100");
+    system("color 00");
+    load_cartoon();
+    system("color 70");
+    choice_level();
+    gotoxy(75,20);
+    system("pause");
+    return 0;
+}
