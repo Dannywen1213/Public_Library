@@ -1,0 +1,322 @@
+
+  /***********************************************************************
+     * Name(s) Xiangli Li Yifan Wen                                        *
+     * Assignment name Project 4                                           *
+     *                                                                     *
+     * Assignment for <21/4/2023>                                          *
+     ***********************************************************************/
+
+    /* *********************************************************************
+     * Academic honesty certification:                                     *
+     *   Written/online sources used:                                      *
+     *                           CSC 161 labs and readings;                *
+     *   Help obtained                                                     *
+     *                tutor                                                *
+     *   My/our signature(s) below confirms that the above list of sources *
+     *   is complete AND that I/we have not talked to anyone else          *
+     *   (e.g., CSC 161 students) about the solution to this problem       *
+     *                                                                     *
+     *   Signature:  Xiangli Li Yifan Wen                                  *
+     ***********************************************************************/
+
+
+
+
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include "tickets.h"
+//include libraries
+
+
+#ifndef __TICKETS_H__
+#define __TICKETS_H__
+
+#define NEW "new"
+#define ASSIGN "assigned"
+#define COMPLETE "completed"
+#define MAX_LEN 50
+//declare variables
+
+int main() {
+  int input=1;
+  int number = 1;
+  struct ticket * newList = NULL;
+  struct ticket * assignlist = NULL;
+  struct ticket * completelist = NULL;
+  //declare variables
+
+  // introductory message
+  printf("This is a tracking ticket system where you can adding new tickets, assigned tickets to technician, and mark tickets to be completed. The following is the menu, enter the number of option to operate this system.\n\n");
+  while (input != 7) {
+    //print the menu
+    printf("1. Create a new tracking ticket\n2. Assign a new ticket to a technician for handling\n3. Mark a ticket complete\n4. Print a list of new tickets\n5. Print a list of assigned tickets\n6. Print a list of completed tickets\n7. Exit the program\n");
+    // ask for input
+    printf("Enter your choice: ");
+
+    int a=scanf("%d", &input);
+    //check if the input is an integer
+    if(a!=1) {
+      printf("\n You should enter an integar, the program is terminated\n\n");//error message
+      return 0;
+    }
+
+    switch (input){
+    case 1:
+      addNew(&newList, number);
+      number++;
+      break;
+      //Add new ticket
+
+    case 2:
+      assign(&newList, &assignlist);
+      break;
+      //assign ticket
+
+    case 3:
+      complete(&assignlist, &completelist);
+      break;
+      //mark a ticket completed
+
+    case 4:
+      print(newList, NEW);
+      break;
+      //print new tickets list
+
+    case 5:
+      print(assignlist, ASSIGN);
+      break;
+      //print assigned tickets list
+
+    case 6:
+      print(completelist, COMPLETE);
+      break;
+      //print completed tickets list
+
+    case 7: 
+      break;
+      //exit the program
+
+    default:
+      printf("\ninput should be 1-7.\n"); //error message
+      break;
+    }
+    printf("\n");
+  }
+
+  printf("Process completeted, end of this program.\n\n");// End of the program
+
+  return 0;//end of the main function
+}
+
+
+
+
+struct ticket{
+  int number;
+  char identifier[MAX_LEN];
+  char code[MAX_LEN];
+  char *status;
+  char technician[MAX_LEN];
+  struct ticket *next;
+};
+//declare struct
+
+
+
+/* This function print the list
+   pre-condition:  first designates the first node of a list, and state is the status of the list
+   post-condition:  The items on the list are printed from first to last
+                   the list itself is unchanged
+*/
+void print (struct ticket * first, char * state);
+
+
+/* This function add a ticket to the end of a list
+   pre-condition:  list designates the first node of a list, and node is a pointer to a ticket
+   post-condition:  the ticket is added to the end of the list
+*/
+void add (struct ticket ** list, struct ticket * node);
+
+/* This function add a new ticket to the list of new tickets
+   pre-condition:  newlist designates the first node of the list of new tickets, and state is the status of the list
+   post-condition:  The items on the list are printed from first to last
+                   the list itself is unchanged
+*/
+void addNew(struct ticket ** newlist, int number);
+
+
+
+/* assign a ticket to a technician, ask user for technician's name.
+   pre-condition: newlist and assignlist are pointers to the first node of a list
+   post-condition: The ticket with smallest number is assigned to the end of assignlist and removed form the
+                   newlist. If there are no new tickets to be assigned (the new tickets list is empty),
+                   then report that message back to the user.
+*/
+void assign (struct ticket ** newlist, struct ticket ** assignlist);
+
+/* mark an assigned ticket to be complete, ask user for ticket's number
+   pre-condition: completelist and assignlist are pointers to the first node of a list
+   post-condition: The ticket is added to the end of the completelist and removed from the assignlist.
+                   If there are no such a ticket or the assigned tickets list is empty,
+                   then report that message back to the user.
+*/
+void complete (struct ticket ** assignlist , struct ticket ** completelist);
+
+
+#endif
+
+
+
+
+void add (struct ticket ** list, struct ticket * point) {
+  if(*list == NULL){
+    /* When it's empty, the list is inserted to the start */
+    *list = point;
+  }
+  else {        
+    /* If it's not empty, we will insert it to the end of this list*/
+    struct ticket * listPtr = *list;
+    /* point to the end of the current list */
+    while (listPtr->next != NULL) {
+      listPtr = listPtr->next;
+    }
+    listPtr->next = point;//add the pointer to the last//
+  } 
+}
+
+
+void addNew(struct ticket ** newlist, int number){
+
+	struct ticket * newTic = malloc(sizeof(struct ticket));
+  //dynamice allocation of the memory//
+
+	if (newTic == NULL) {
+		printf("Fail to allocate the memory");
+    return;
+	}//test if memory allocation successful, and if it's not, we will terminate the program
+
+	newTic->next = NULL;//set the next in newT to NULL
+	
+  //ask for company identifier
+	printf("Company identifier: ");
+	scanf("%s", newTic->identifier);
+
+  //ask for problem code the problem code here should be a string, so we use %s
+  printf("Problem code: ");
+	scanf("%s", newTic->code);
+
+  //assign value for the new ticket
+	newTic->number = number;
+  newTic->status = NEW;
+  strcpy(newTic->technician, "unassigned");
+  newTic->next = NULL;  
+  
+  //add the new ticket to the end of the new ticket list
+  add(newlist, newTic);
+  printf ("\nNew ticket NO.%d added to the end of the newtickets list\n\n", number);
+
+	return;//end of function
+}
+
+
+
+void print (struct ticket * first, char * state) {
+   
+
+  printf ("\nThe tickets on the list of %s tickets are:\n\n", state);
+
+  for (struct ticket * current = first ; current != NULL ; current = current->next ) {
+    printf ("NO.%d\ncompany: %s\nproblem code: %s\nstatus: %s\ntechnician: %s\n\n", current->number, current->identifier, current->code, current->status, current->technician);
+  }//print the tickets imformation
+
+  printf ("End of List\n\n");
+} // print
+
+
+
+
+void assign (struct ticket ** newlist, struct ticket ** assignlist){
+  if (*newlist == NULL) {
+    printf("\nThere is no new tickets to assign.\n\n");
+    return;
+  }// check if new ticket list is empty
+  else{
+  struct ticket * Assi;
+  Assi = *newlist;
+  Assi->status = ASSIGN;
+  char name [MAX_LEN];
+  //declare variables
+
+  //assign the technician's name
+  printf("Please enter the name of technician: ");
+  scanf("%s",name);
+  strcpy(Assi->technician, name);//give the input name to technician
+  *newlist = (*newlist)->next;
+  Assi->next = NULL;
+
+  // add the ticket to assigned ticket list
+  add(assignlist, Assi);
+
+  printf ("\nTicket NO.%d is assigned to %s\n\n", Assi->number, name);
+
+	return;//end of function
+  }
+}
+
+
+void complete (struct ticket ** assignlist , struct ticket ** completelist){
+  int num;
+  bool check = 0;
+  struct ticket * listPtr;
+  struct ticket * prevPtr;
+  //declare variables
+
+  if(*assignlist == NULL){
+    printf("\nUnable to complete it, you should have something in the assigned list\n");
+    return;
+  }//check if the assign list is empty
+
+  else{
+    //ask for ticker number for marking completed
+    printf("Enter the number of ticket to be aggigned completed: ");
+    scanf("%d",&num);
+    // first node of the assign list to be marked completed
+    if ((*assignlist)->number == num) {
+      listPtr = *assignlist;
+      // remove the ticket from assign list
+      *assignlist = (*assignlist)->next;
+      listPtr->status = COMPLETE;
+      listPtr->next = NULL;
+      // add the ticket to the end of the complete list
+      add(completelist, listPtr);
+
+      check = 1;
+    }
+    else {
+      listPtr = (*assignlist)->next;
+      prevPtr = *assignlist;
+      // loop throught the assign list to look for ticket with input number
+      for( prevPtr = listPtr;listPtr != NULL;listPtr = listPtr->next){
+        if (listPtr->number == num) {
+          // remove the ticket from assign list
+          prevPtr->next = listPtr->next;
+          listPtr->status = COMPLETE;
+          listPtr->next = NULL;
+          // add the ticket to the end of the complete list
+          add(completelist, listPtr);
+
+          check = 1;
+          listPtr = NULL; // jump out of the loop
+        }
+      }
+    }
+    if (check!=1) {
+      printf("\nError: Can't find an assigned ticket with this number.\n");//print error message
+    }
+    else {
+      printf("\nTicket NO.%d has been completed.\n", num);//print the message that shows which ticket is completed
+    }
+    return;
+  }
+}
